@@ -1,5 +1,7 @@
+// import * as types from "./actionTypes";
 import * as types from "./actionTypes";
 import * as courseApi from "../../api/courseApi";
+import { beginApiCall, apiCallError } from "./apiStatusActions";
 
 export const loadCoursesSuccess = (courses) => {
   return {
@@ -8,7 +10,8 @@ export const loadCoursesSuccess = (courses) => {
   };
 };
 
-export function createCourseSuccess(course) {
+
+export const createCourseSuccess = (course) => {
   return { type: types.CREATE_COURSE_SUCCESS, course };
 }
 
@@ -16,22 +19,29 @@ export function updateCourseSuccess(course) {
   return { type: types.UPDATE_COURSE_SUCCESS, course };
 }
 
+export const deleteCourseOptimistic = (course) => {
+    return { type: types.DELETE_COURSE_OPTIMISTIC, course }
+}
+
 export const loadCourses = () => {
   return (dispatch) => {
+    dispatch(beginApiCall());
     return courseApi
       .getCourses()
       .then((courses) => {
         dispatch(loadCoursesSuccess(courses));
       })
       .catch((error) => {
+        dispatch(apiCallError(error))
         throw error;
       });
   };
 };
 
-export function saveCourse(course) {
+export const saveCourse = (course) => {
   //eslint-disable-next-line no-unused-vars
   return function (dispatch, getState) {
+    dispatch(beginApiCall());
     return courseApi
       .saveCourse(course)
       .then((savedCourse) => {
@@ -40,7 +50,16 @@ export function saveCourse(course) {
           : dispatch(createCourseSuccess(savedCourse));
       })
       .catch((error) => {
+          dispatch(apiCallError(error))
         throw error;
       });
   };
 }
+
+export const deleteCourse = (course) => {
+    return (dispatch) => {
+
+        dispatch(deleteCourseOptimistic(course));
+        return courseApi.deleteCourse(course.id);
+    };
+};
